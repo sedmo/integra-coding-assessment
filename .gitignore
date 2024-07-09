@@ -1,0 +1,63 @@
+# Ignore all environment files
+*.env
+
+# Node.js dependencies and build artifacts (Angular frontend)
+/angular-frontend/node_modules/
+/angular-frontend/dist/
+
+# Log files
+*.log
+
+# MacOS and Linux system files
+.DS_Store
+*.swp
+
+# Coverage reports
+coverage/
+
+# Ignore Go build artifacts (Go backend)
+/go-backend/main
+/go-backend/main.exe
+
+# Ignore Go test binaries (Go backend)
+/go-backend/*.out
+
+# Compiled output
+/dist
+/tmp
+/out-tsc
+/bazel-out
+
+# Node
+/node_modules
+npm-debug.log
+yarn-error.log
+
+# IDEs and editors
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Miscellaneous
+/.angular/cache
+.sass-cache/
+/connect.lock
+/coverage
+/libpeerconnection.log
+testem.log
+/typings
+
+# System files
+.DS_Store
+Thumbs.db
