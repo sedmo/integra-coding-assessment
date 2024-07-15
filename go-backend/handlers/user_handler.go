@@ -22,12 +22,12 @@ func GetUsers(c echo.Context) error {
 	query := db.Psql.Select("*").From("users")
 	sqlQuery, args, err := query.ToSql()
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	rows, err := db.DB.Query(sqlQuery, args...)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	defer rows.Close()
 
@@ -35,7 +35,7 @@ func GetUsers(c echo.Context) error {
 	for rows.Next() {
 		var user models.User
 		if err := rows.Scan(&user.UserID, &user.UserName, &user.FirstName, &user.LastName, &user.Email, &user.UserStatus, &user.Department); err != nil {
-			return c.JSON(http.StatusInternalServerError, err.Error())
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 		users = append(users, user)
 	}
@@ -53,21 +53,21 @@ func GetUsers(c echo.Context) error {
 func CreateUser(c echo.Context) error {
 	user := new(models.User)
 	if err := c.Bind(user); err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	if err := user.Validate(); err != nil {
 		validationErrors := err.(validator.ValidationErrors)
-		return c.JSON(http.StatusBadRequest, validationErrors.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, validationErrors.Error())
 	}
 
 	// Check if username already exists
 	existingUser, err := getUserByUsername(user.UserName)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+	if err != nil && err != sql.ErrNoRows {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	if existingUser != nil {
-		return c.JSON(http.StatusConflict, "username already exists")
+		return echo.NewHTTPError(http.StatusConflict, "username already exists")
 	}
 
 	query := db.Psql.Insert("users").
@@ -77,12 +77,12 @@ func CreateUser(c echo.Context) error {
 
 	sqlQuery, args, err := query.ToSql()
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	err = db.DB.QueryRow(sqlQuery, args...).Scan(&user.UserID)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusCreated, user)
@@ -101,21 +101,21 @@ func UpdateUser(c echo.Context) error {
 	id := c.Param("id")
 	user := new(models.User)
 	if err := c.Bind(user); err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	if err := user.Validate(); err != nil {
 		validationErrors := err.(validator.ValidationErrors)
-		return c.JSON(http.StatusBadRequest, validationErrors.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, validationErrors.Error())
 	}
 
 	// Check if username already exists for a different user
 	existingUser, err := getUserByUsername(user.UserName)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	if existingUser != nil && existingUser.UserID != user.UserID {
-		return c.JSON(http.StatusConflict, "username already exists")
+		return echo.NewHTTPError(http.StatusConflict, "username already exists")
 	}
 
 	query := db.Psql.Update("users").
@@ -129,12 +129,12 @@ func UpdateUser(c echo.Context) error {
 
 	sqlQuery, args, err := query.ToSql()
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	_, err = db.DB.Exec(sqlQuery, args...)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, user)
@@ -155,12 +155,12 @@ func DeleteUser(c echo.Context) error {
 
 	sqlQuery, args, err := query.ToSql()
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	_, err = db.DB.Exec(sqlQuery, args...)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, "User deleted")
