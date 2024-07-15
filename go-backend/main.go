@@ -41,7 +41,7 @@ func main() {
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	pgConnector := &connectors.PostgresConnector{}
-    db.InitDB(pgConnector)
+	db.InitDB(pgConnector)
 
 	// Routes
 	e.GET("/users", handlers.GetUsers)

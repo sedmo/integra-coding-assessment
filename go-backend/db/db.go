@@ -2,7 +2,7 @@ package db
 
 import (
 	"database/sql"
-	"log"
+	"errors"
 	"os"
 
 	"github.com/Masterminds/squirrel"
@@ -20,27 +20,29 @@ type DBConnector interface {
 	RunMigrationsDown(db *sql.DB) error
 }
 
-func InitDB(connector DBConnector) {
+func InitDB(connector DBConnector) error {
 	connectionString = os.Getenv("DATABASE_URL")
 	if connectionString == "" {
-		log.Fatal("DATABASE_URL environment variable is not set")
+		return errors.New("DATABASE_URL environment variable is not set")
 	}
 
 	var err error
 	DB, err = connector.Open(connectionString)
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		return err
 	}
 
 	if err := connector.Ping(DB); err != nil {
-		log.Fatalf("Failed to ping database: %v", err)
+		return err
 	}
 
 	if err := connector.RunMigrationsDown(DB); err != nil {
-		log.Fatalf("Error running migrations down: %v", err)
+		return err
 	}
 
 	if err := connector.RunMigrationsUp(DB); err != nil {
-		log.Fatalf("Error running migrations up: %v", err)
+		return err
 	}
+
+	return nil
 }
